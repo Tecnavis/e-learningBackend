@@ -8,6 +8,8 @@ var cors = require("cors");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var bannerRouter = require('./routes/banner');
+var specialDaysRouter = require('./routes/specialDays');
+
 
 var connectDB = require('./config/db');
 
@@ -35,9 +37,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// end points
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/banner', bannerRouter);
+app.use('/specialdays', specialDaysRouter);
+
 
 
 // catch 404 and forward to error handler

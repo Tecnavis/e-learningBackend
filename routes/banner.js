@@ -1,18 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Controller = require('../controllers/banner')
-const multer = require("multer");
+const Controller = require('../controllers/banner');
+const upload = require('../lib/multer');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/images");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-var upload = multer({ storage: storage });
 
 // Use .array() to handle multiple images
 router.post('/', upload.array("images", 10), Controller.create); // 10 is the max number of images allowed
