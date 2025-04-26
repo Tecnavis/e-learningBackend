@@ -6,9 +6,14 @@ var logger = require('morgan');
 var cors = require("cors");
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 var bannerRouter = require('./routes/banner');
 var specialDaysRouter = require('./routes/specialDays');
+var syllabusRouter = require('./routes/syllabus');
+var usersRouter = require('./routes/users');
+var discussionRouter = require('./routes/discussion');
+
+
+
 
 
 var connectDB = require('./config/db');
@@ -43,6 +48,12 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/banner', bannerRouter);
 app.use('/specialdays', specialDaysRouter);
+app.use('/syllabus', syllabusRouter);
+app.use('/users', usersRouter);
+app.use('/discussion', discussionRouter);
+
+
+
 
 
 
