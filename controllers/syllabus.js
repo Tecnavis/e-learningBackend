@@ -69,3 +69,61 @@ exports.addClassToSyllabus = asyncHandler(async (req, res) => {
     res.status(200).json(syllabus);
   });
   
+
+
+
+// Update rating for a specific chapter
+exports.updateRating = async (req, res) => {
+  const { id, classNo, subjectTitle, chapterTitle } = req.params;
+  const { rating, userId } = req.body;
+
+  try {
+    const syllabus = await SyllabusModel.findById(id);
+    if (!syllabus) {
+      return res.status(404).json({ message: "Syllabus not found" });
+    }
+
+    const classObj = syllabus.classes.find(cls => cls.no === parseInt(classNo));
+    if (!classObj) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    const subjectObj = classObj.subjects.find(sub => sub.title === subjectTitle);
+    if (!subjectObj) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
+
+    const chapterObj = subjectObj.chapters.find(chap => chap.title === chapterTitle);
+    if (!chapterObj) {
+      return res.status(404).json({ message: "Chapter not found" });
+    }
+
+    // Initialize rating structure if not exists
+    if (!chapterObj.rating) {
+      chapterObj.rating = { ratings: [], average: 0 };
+    }
+
+    // Check if user already rated
+    const alreadyRated = chapterObj.rating.ratings.find(r => r.userId === userId);
+    if (alreadyRated) {
+      return res.status(400).json({ message: "User has already rated this chapter." });
+    }
+
+    // Push new rating
+    chapterObj.rating.ratings.push({ userId, value: rating });
+
+    // Calculate new average
+    const totalRatings = chapterObj.rating.ratings.length;
+    const sumRatings = chapterObj.rating.ratings.reduce((sum, r) => sum + r.value, 0);
+    chapterObj.rating.average = sumRatings / totalRatings;
+
+    await syllabus.save();
+
+    res.status(200).json({ message: "Rating updated successfully", syllabus });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+

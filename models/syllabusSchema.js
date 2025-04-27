@@ -36,6 +36,11 @@ const syllabusSchema = new mongoose.Schema(
                 },
                 rating: {
                   type: Number,
+                  userId: [
+                    {
+                      type: mongoose.Schema.Types.ObjectId, 
+                    }
+                  ]
                 },
                 document: {
                   pdf: {

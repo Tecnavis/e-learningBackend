@@ -7,13 +7,13 @@ const crypto = require('crypto');
 
 //create user
 exports.create = asyncHandler(async (req, res) => {
-    const { name, email, password, district, standerd } = req.body;
+    const { name, email, password, district, standard } = req.body;
     
-    const image = req.file.filename;
-    if (!name || !email || !password  ||  !district || !standerd ) {
+    if (!name || !email || !password  ||  !district || !standard ) {
       return res.status(400).json({ message: "Please add all fields" });
     }
   
+
 // Check  email or phone already exists
     const userExists = await UserModel.findOne({ 
       $or: [{ email: email }] 
@@ -25,71 +25,70 @@ exports.create = asyncHandler(async (req, res) => {
       }
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+
      const  role = 'user'
       const user = await UserModel.create({
       name,
       email,
-      password,
+      password: hashedPassword,
       role,
       district,
-      standerd,
-      image
+      standard,
     });
   
     if (user) {
-      return res.status(201).json({ message: "User created" });
+      return res.status(201).json({ message: "User created", status: 201 });
     } else {
       return res.status(400).json({ message: "User not created" });
     }
   });
 
-
   exports.login = asyncHandler(async (req, res) => {
-    
-    
     try {
-      const { email, password } = req.body; // Include fcmToken in request body
-      console.log(req.body);
-      const user = await UserModel.findOne( email );
-
-      console.log(user, "use");
+      const { email, password } = req.body;
+     
+  
+      const user = await UserModel.findOne({ 
+        email: email }); 
+  
+  
+      if (!user) {
+        return res.status(400).json({ invalid: true, message: "Invalid email or password" });
+      }
+  
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
+  
       
+      if (isPasswordMatch) {
+        const token = jwt.sign(
+          { email: user.email, id: user._id },
+          "myjwtsecretkey",
+          { expiresIn: "1h" }
+        );
   
-        if (!user) {
-            return res.status(400).json({ invalid: true, message: "Invalid email or password" });
-        }
+        const userDetails = {
+          name: user.name,
+          email: user.email,
+          _id: user._id,
+          role: user.role,
+          phone: user.phone,
+          image: user?.image,
+          district: user.district,
+          standard: user.standard
+        };
   
-        // if (user.blocked) {
-        //     return res.status(403).json({ message: "Your account is blocked" }); 
-        // }
-  
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-  
-        if (isPasswordMatch) {
-            const token = jwt.sign({ email: user.email, id: user._id }, "myjwtsecretkey", { expiresIn: "1h" });
-  
-  
-            await user.save(); 
-  
-            const userDetails = {
-                name: user.name,
-                email: user.email,
-                _id: user._id,
-                role: user.role,
-                phone: user.phone,
-                image: user.image,
-                district: user.district,
-                standerd: user.standerd
-            };
-  
-            return res.status(200).json({ token, userDetails });
-        } else {
-            return res.status(400).json({ invalid: true, message: "Invalid email or password" });
-        }
+        return res.status(200).json({ token, userDetails, status: 200 });
+      } else {
+        return res.status(400).json({ invalid: true, message: "Invalid email or password" });
+      }
     } catch (err) {
-        return res.status(500).json({ error: "Server error, please try again" });
+      console.error(err); 
+      return res.status(500).json({ error: "Server error, please try again" });
     }
   });
+  
 
 
 // get all 
@@ -109,3 +108,37 @@ exports.delete = asyncHandler(async (req, res) => {
      await UserModel.findByIdAndDelete(req.params.id);
     res.status(200).json({message: "User deleted"});
 })
+
+
+// Update user (partial update)
+exports.update = asyncHandler(async (req, res) => {
+  const { name, email, district, standard } = req.body; 
+
+  const image = req.file?.filename;
+
+  
+  const user = await UserModel.findById(req.params.id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // If email is changing, check if new email already exists
+  if (email && email !== user.email) {
+    const emailExists = await UserModel.findOne({ email });
+    if (emailExists) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+  }
+
+  // Update only the fields provided
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (district) user.district = district;
+  if (standard) user.standard = standard;
+  if (image) user.image = image;
+
+  const updatedUser = await user.save();
+
+  res.status(200).json({ message: "User updated successfully", user: updatedUser, status: 200 });
+});

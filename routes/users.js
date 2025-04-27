@@ -4,10 +4,10 @@ const Controller = require('../controllers/user');
 const upload = require('../lib/multer');
 
 
-router.post('/', upload.single("image"), Controller.create); 
+router.post('/',  Controller.create); 
 router.get('/', Controller.getAll);
 router.get('/:id', Controller.get);
-// router.put('/:id', upload.single("image"), Controller.);
+router.put('/:id', upload.single("image"), Controller.update);
 router.delete('/:id', Controller.delete);
 router.post("/login", Controller.login);
 

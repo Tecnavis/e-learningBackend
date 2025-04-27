@@ -10,6 +10,8 @@ router.get('/:id', Controller.get);
 router.put('/:id', upload.single("image"), Controller.update);
 router.delete('/:id', Controller.delete);
 router.put("/add-class/:id", Controller.addClassToSyllabus);
+router.put("/:id/class/:classNo/subject/:subjectTitle/chapter/:chapterTitle/rating", Controller.updateRating);
+
 
 
 module.exports = router;
