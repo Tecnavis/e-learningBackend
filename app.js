@@ -25,7 +25,7 @@ var app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: ["http://localhost:5174", "http://localhost:3000", "http://localhost:5173"],
+  origin: ["http://localhost:5174", "http://localhost:3000", "http://localhost:5173", "https://e-learning-lac-seven.vercel.app"],
   methods: ["PUT", "DELETE", "POST", "GET", "PATCH"],
   credentials: true
 }));
