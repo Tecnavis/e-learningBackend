@@ -3,11 +3,21 @@ const asyncHandler = require("express-async-handler");
 
 //create special days
 exports.create = asyncHandler(async (req, res) => {
-    const { title } = req.body;
-    const image = req.file?.filename;
-    const specialDays = await SpecialDaysModel.create({ image, title }); 
-    res.status(200).json(specialDays);
+  const { title, pdf, date } = req.body;
+
+  const image =  req.file.filename ; 
+
+  // Create a new special day entry
+  const specialDays = await SpecialDaysModel.create({
+    image,
+    title,
+    pdf,
+    date,
+  });
+
+  res.status(201).json({ specialDays, status: 201 });
 });
+
 
 //get all special days
 exports.getAll = asyncHandler(async (req, res) => {
@@ -24,17 +34,22 @@ exports.get = asyncHandler(async (req, res) => {
 //update A special days
 exports.update = asyncHandler(async (req, res) => {
     const image = req.file?.filename;
-    const {title} = req.body;
-    const specialDays = await SpecialDaysModel.findByIdAndUpdate(req.params.id, { image, title }, {
+    const { title, pdf, date } = req.body;
+    console.log(req.body, "body");
+    console.log(image, "img");
+    
+    
+    const specialDays = await SpecialDaysModel.findByIdAndUpdate(req.params.id, { image, title, pdf, date }, {
         new: true
     });
-    res.status(200).json(specialDays);
+    res.status(200).json({specialDays, status: 200  });
 }); 
 
 
 //delete A special days
 exports.delete = asyncHandler(async (req, res) => {
-    const specialDays = await SpecialDaysModel.findByIdAndDelete(req.params.id);
-    res.status(200).json(specialDays);
+    const { id } = req.params;
+    const specialDays = await SpecialDaysModel.findByIdAndDelete(id);
+    res.status(200).json({specialDays,  status: 200 });
 })
 

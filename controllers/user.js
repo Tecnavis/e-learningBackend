@@ -93,7 +93,7 @@ exports.create = asyncHandler(async (req, res) => {
 
 // get all 
 exports.getAll = asyncHandler(async (req, res) => {
-    const user = await UserModel.find();
+    const user = await UserModel.find({ role : 'user' });
     res.status(200).json(user);
 })
 

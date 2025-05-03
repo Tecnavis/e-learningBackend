@@ -3,10 +3,33 @@ const asyncHandler = require("express-async-handler");
 
 // Create a new syllabus
 exports.create = asyncHandler(async (req, res) => {
-  const { title, classes } = req.body;
-  const syllabus = await SyllabusModel.create({ title, classes });
-  res.status(200).json(syllabus);
+  try {
+
+    let { title, classes } = req.body;
+
+    if (typeof classes === 'string') {
+      classes = JSON.parse(classes); // Parse the string into an array
+    }
+
+    const image = req.file ? req.file.filename : null;
+
+    if (image) {
+      classes.forEach(classObj => {
+        classObj.subjects.forEach(subject => {
+          subject.image = image; // Add image file name to each subject
+        });
+      });
+    }
+
+    // Create the syllabus in the database
+    const syllabus = await SyllabusModel.create({ title, classes });
+    res.status(200).json({ syllabus, status: 201 });
+  } catch (error) {
+    console.error("Error in creating syllabus:", error);
+    res.status(500).json({ message: "An error occurred while creating the syllabus", error });
+  }
 });
+
 
 // Get all syllabuses
 exports.getAll = asyncHandler(async (req, res) => {
@@ -43,31 +66,71 @@ exports.delete = asyncHandler(async (req, res) => {
   if (!syllabus) {
     return res.status(404).json({ message: "Syllabus not found" });
   }
-  res.status(200).json(syllabus);
+  res.status(200).json({ syllabus, status: 200  });
 });
 
+
+exports.deleteAClass = asyncHandler(async (req, res) => {
+  const { id, no } = req.params;
+
+  // Find the syllabus by ID
+  const syllabus = await SyllabusModel.findById(id);
+  
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+
+  // Check if class exists
+  const classIndex = syllabus.classes.findIndex(cls => cls.no === parseInt(no));
+  if (classIndex === -1) {
+    return res.status(404).json({ message: `Class ${no} not found in syllabus.` });
+  }
+
+  // Remove the class from the array
+  syllabus.classes.splice(classIndex, 1);
+
+  // Save the updated document
+  await syllabus.save();
+
+  res.status(200).json({ message: `Class ${no} deleted successfully`, syllabus, status: 200 });
+});
+
+
 exports.addClassToSyllabus = asyncHandler(async (req, res) => {
-    const { id } = req.params; // Syllabus ID
-    const newClass = req.body; // Contains `no`, `subjects`, etc.
-  
-    // Step 1: Find syllabus
-    const syllabus = await SyllabusModel.findById(id);
-    if (!syllabus) {
-      return res.status(404).json({ message: "Syllabus not found" });
-    }
-  
-    // Step 2: Check if the `no` already exists
-    const classExists = syllabus.classes.some(c => c.no === newClass.no);
-    if (classExists) {
-      return res.status(400).json({ message: `Class ${newClass.no} already exists.` });
-    }
-  
-    // Step 3: Push the new class
-    syllabus.classes.push(newClass);
-    await syllabus.save();
-  
-    res.status(200).json(syllabus);
-  });
+  const { id } = req.params; // Syllabus ID
+  const newClass = JSON.parse(req.body.addSyllbusClass); // Parse the JSON string
+
+  console.log(newClass, "newClass");  // Check the structure of newClass
+
+  // Step 1: Find syllabus
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+
+  // Step 2: Check if the `no` already exists
+  const classExists = syllabus.classes.some(c => c.no === newClass.no);
+  if (classExists) {
+    return res.status(400).json({ message: `Class ${newClass.no} already exists.` });
+  }
+
+  // Step 3: Handle image upload
+  const image = req.file ? req.file.filename : null;
+
+  // If an image is uploaded, assign it to each subject in the class
+  if (image) {
+    newClass.subjects.forEach(subject => {
+      subject.image = image; // Assign the image to each subject
+    });
+  }
+
+  // Step 4: Push the new class into the syllabus
+  syllabus.classes.push(newClass);
+  await syllabus.save();
+
+  res.status(200).json({ syllabus, status: 200 });
+});
+
   
 
 

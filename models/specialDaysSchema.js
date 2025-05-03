@@ -8,6 +8,12 @@ const specialDaysSchema = new mongoose.Schema({
     image: {
         type: String, 
         required: true
+    },
+    pdf: {
+        type: String,
+      },
+    date: {
+        type: Date
     }
 }, { timestamps: true });
 
