@@ -7,9 +7,10 @@ const crypto = require('crypto');
 
 //create user
 exports.create = asyncHandler(async (req, res) => {
-    const { name, email, password, district, standard } = req.body;
+    const { name, email, password, district, standard,  phone } = req.body;
     
-    if (!name || !email || !password  ||  !district || !standard ) {
+    
+    if (!name || !email || !password  ||  !district || !standard || !phone ) {
       return res.status(400).json({ message: "Please add all fields" });
     }
   
@@ -36,6 +37,7 @@ exports.create = asyncHandler(async (req, res) => {
       role,
       district,
       standard,
+      phone
     });
   
     if (user) {

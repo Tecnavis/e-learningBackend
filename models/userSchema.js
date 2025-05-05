@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
     standard: {
         type: String
     },
+    phone: {
+         type: String,
+         unique: true 
+    },
     district: {
         type: String
     },

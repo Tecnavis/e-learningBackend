@@ -69,6 +69,7 @@ exports.delete = asyncHandler(async (req, res) => {
   res.status(200).json({ syllabus, status: 200  });
 });
 
+// delete a class
 
 exports.deleteAClass = asyncHandler(async (req, res) => {
   const { id, no } = req.params;
@@ -95,12 +96,11 @@ exports.deleteAClass = asyncHandler(async (req, res) => {
   res.status(200).json({ message: `Class ${no} deleted successfully`, syllabus, status: 200 });
 });
 
+// add new syllabus class
 
 exports.addClassToSyllabus = asyncHandler(async (req, res) => {
   const { id } = req.params; // Syllabus ID
   const newClass = JSON.parse(req.body.addSyllbusClass); // Parse the JSON string
-
-  console.log(newClass, "newClass");  // Check the structure of newClass
 
   // Step 1: Find syllabus
   const syllabus = await SyllabusModel.findById(id);
@@ -131,7 +131,227 @@ exports.addClassToSyllabus = asyncHandler(async (req, res) => {
   res.status(200).json({ syllabus, status: 200 });
 });
 
+// Delete a syllabus class sbujucts
+
+exports.deleteAClassSubject = asyncHandler(async (req, res) => {
+  const { id, no, subjectId } = req.params;
+
+  // Find the syllabus by ID
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+
+  // Find the class by number
+  const classObj = syllabus.classes.find(cls => cls.no === parseInt(no));
+  if (!classObj) {
+    return res.status(404).json({ message: `Class ${no} not found in syllabus.` });
+  }
+
+  // Find the subject index
+  const subjectIndex = classObj.subjects.findIndex(subject => subject._id.toString() === subjectId);
+  if (subjectIndex === -1) {
+    return res.status(404).json({ message: "Subject not found in class." });
+  }
+
+  // Remove the subject
+  classObj.subjects.splice(subjectIndex, 1);
+
+  // Save the updated syllabus
+  await syllabus.save();
+
+  res.status(200).json({ message: "Subject deleted successfully", status: 200 });
+});
+
+
+// add new syllabus class subjects
+
+exports.addClassSubjectsToSyllabus = asyncHandler(async (req, res) => {
+  const { id, no } = req.params;
   
+  const newSubject = JSON.parse(req.body.addSyllbusClass);
+  
+  
+  // Find the syllabus by ID
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+  
+  // Find the specific class by "no"
+  const classItem = syllabus.classes.find(c => c.no === Number(no));
+  if (!classItem) {
+    return res.status(400).json({ message: "Class not found." });
+  }
+  
+  // Handle image upload
+  const image = req.file ? req.file.filename : null;
+  if (image) {
+    newSubject.subjects.forEach(subject => {
+      subject.image = image;
+    });
+  }
+
+  // Push new subjects into the correct class
+  classItem.subjects.push(...newSubject.subjects);  
+
+  await syllabus.save();
+
+  res.status(200).json({ syllabus, status: 200 });
+});
+
+// edit new syllabus class subject chapters 
+
+
+exports.editClassSubjectsToSyllabus = asyncHandler(async (req, res) => {
+  const { id, no, subjectId } = req.params;
+
+  const updatedData = JSON.parse(req.body.addSyllbusClass);
+
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+
+  const classItem = syllabus.classes.find((c) => c.no === Number(no));
+  if (!classItem) {
+    return res.status(400).json({ message: "Class not found." });
+  }
+
+  const subject = classItem.subjects.find((s) => s._id.toString() === subjectId);
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found." });
+  }
+
+  // Update fields
+  subject.title = updatedData.subjects[0].title || subject.title;
+  subject.author = updatedData.subjects[0].author || subject.author;
+
+  if (req.file) {
+    subject.image = req.file.filename; // replace old image if new one is uploaded
+  }
+
+  await syllabus.save();
+
+  res.status(200).json({ message: "Subject updated successfully", status: 200, subject });
+});
+
+// add new syllabus class subject chapters 
+exports.addClassSubjectsChapterToSyllabus = asyncHandler(async (req, res) => {
+  const { id, no, subjectId } = req.params;
+  
+  const newChapter =  req.body.chapters?.[0];
+  
+  // Find the syllabus
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+
+  
+  // Find the specific class
+  const classItem = syllabus.classes.find(c => c.no === Number(no));
+  if (!classItem) {
+    return res.status(404).json({ message: "Class not found." });
+  }
+
+  // Find the specific subject
+  const subject = classItem.subjects.find(s => s._id.toString() === subjectId);
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found in class." });
+  }
+
+  // Add the chapter
+  subject.chapters.push(newChapter);
+
+  await syllabus.save();
+
+  res.status(200).json({ syllabus, status: 200 });
+});
+
+// edit  syllabus class subject chapters 
+
+exports.editClassSubjectsChapterToSyllabus = asyncHandler(async (req, res) => {
+  const { id, no, subjectId, chapterId } = req.params;
+
+  const newChapterData = req.body.chapters?.[0];
+
+  if (!newChapterData || !newChapterData.title || !newChapterData.description) {
+    return res.status(400).json({ message: "Invalid chapter data." });
+  }
+
+  // Find the syllabus document
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found." });
+  }
+
+  // Find the class by number
+  const classItem = syllabus.classes.find((cls) => cls.no === Number(no));
+  if (!classItem) {
+    return res.status(404).json({ message: "Class not found." });
+  }
+
+  // Find the subject by ID
+  const subject = classItem.subjects.find(
+    (subj) => subj._id.toString() === subjectId
+  );
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found in class." });
+  }
+
+  // Find the chapter by ID
+  const chapterIndex = subject.chapters.findIndex(
+    (ch) => ch._id.toString() === chapterId
+  );
+  if (chapterIndex === -1) {
+    return res.status(404).json({ message: "Chapter not found in subject." });
+  }
+
+  // Update the chapter data
+  subject.chapters[chapterIndex] = {
+    ...subject.chapters[chapterIndex]._doc,
+    ...newChapterData,
+  };
+
+  // Save the updated syllabus
+  await syllabus.save();
+
+  res.status(200).json({ status: 200, message: "Chapter updated successfully", syllabus });
+});
+
+//  delete  syllabus class subject chapters 
+
+
+exports.deleteAClassSubjectChapter = asyncHandler(async (req, res) => {
+  const { id, no, subjectId, chapterId } = req.params;
+
+  // Find the syllabus by ID
+  const syllabus = await SyllabusModel.findById(id);
+  if (!syllabus) {
+    return res.status(404).json({ message: "Syllabus not found" });
+  }
+
+  // Find the class by number
+  const classObj = syllabus.classes.find(cls => cls.no === parseInt(no));
+  if (!classObj) {
+    return res.status(404).json({ message: `Class ${no} not found in syllabus.` });
+  }
+
+  // Find the subject
+  const subject = classObj.subjects.find(subject => subject._id.toString() === subjectId);
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found in class." });
+  }
+
+  // Remove the chapter
+  subject.chapters = subject.chapters.filter(chap => chap._id.toString() !== chapterId);
+
+  // Save the updated syllabus
+  await syllabus.save();
+
+  res.status(200).json({ message: "Chapter deleted successfully", status: 200 });
+});
 
 
 
