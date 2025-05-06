@@ -25,7 +25,7 @@ var app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: ["https://e-learning-dashboard-tau.vercel.app", "http://localhost:3000", "http://localhost:5173", "https://e-learning-kappa-one.vercel.app"],
+  origin: ["https://e-learning-dashboard-eight.vercel.app", "http://localhost:3000", "http://localhost:5173", "https://e-learning-gray-mu.vercel.app"],
   methods: ["PUT", "DELETE", "POST", "GET", "PATCH"],
   credentials: true
 }));
