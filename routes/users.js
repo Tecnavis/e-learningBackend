@@ -10,6 +10,8 @@ router.get('/:id', Controller.get);
 router.put('/:id', upload.single("image"), Controller.update);
 router.delete('/:id', Controller.delete);
 router.post("/login", Controller.login);
+router.put("/logout/:id", Controller.logout);
+
 
 
 module.exports = router;

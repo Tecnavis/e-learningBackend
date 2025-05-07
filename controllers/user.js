@@ -1,124 +1,139 @@
+const ActivityLog = require("../models/activeSchema");
 const UserModel = require("../models/userSchema");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const crypto = require('crypto');
-
+const crypto = require("crypto");
 
 //create user
 exports.create = asyncHandler(async (req, res) => {
-    const { name, email, password, district, standard,  phone } = req.body;
-    
-    
-    if (!name || !email || !password  ||  !district || !standard || !phone ) {
-      return res.status(400).json({ message: "Please add all fields" });
-    }
-  
+  const { name, email, password, district, standard, phone } = req.body;
 
-// Check  email or phone already exists
-    const userExists = await UserModel.findOne({ 
-      $or: [{ email: email }] 
+  if (!name || !email || !password || !district || !standard || !phone) {
+    return res.status(400).json({ message: "Please add all fields" });
+  }
+
+  // Check  email or phone already exists
+  const userExists = await UserModel.findOne({
+    $or: [{ email: email }],
+  });
+
+  if (userExists) {
+    if (userExists.email === email) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const role = "user";
+  const user = await UserModel.create({
+    name,
+    email,
+    password: hashedPassword,
+    role,
+    district,
+    standard,
+    phone,
+  });
+
+  if (user) {
+    return res.status(201).json({ message: "User created", status: 201 });
+  } else {
+    return res.status(400).json({ message: "User not created" });
+  }
+});
+
+exports.login = asyncHandler(async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await UserModel.findOne({
+      email: email,
     });
-  
-    if (userExists) {
-      if (userExists.email === email) {
-        return res.status(400).json({ message: "Email already exists" });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ invalid: true, message: "Invalid email or password" });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (isPasswordMatch) {
+      const token = jwt.sign(
+        { email: user.email, id: user._id },
+        "myjwtsecretkey",
+        { expiresIn: "1h" }
+      );
+
+      const userDetails = {
+        name: user.name,
+        email: user.email,
+        _id: user._id,
+        role: user.role,
+        phone: user.phone,
+        image: user?.image,
+        district: user.district,
+        standard: user.standard,
+      };
+
+      if(user.role !== "admin"){
+        await ActivityLog.create({
+          userId: user._id,
+          loginTime: new Date(),
+        });
       }
-    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-
-     const  role = 'user'
-      const user = await UserModel.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-      district,
-      standard,
-      phone
-    });
-  
-    if (user) {
-      return res.status(201).json({ message: "User created", status: 201 });
+      return res.status(200).json({ token, userDetails, status: 200 });
     } else {
-      return res.status(400).json({ message: "User not created" });
+      return res
+        .status(400)
+        .json({ invalid: true, message: "Invalid email or password" });
     }
-  });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Server error, please try again" });
+  }
+});
 
-  exports.login = asyncHandler(async (req, res) => {
-    try {
-      const { email, password } = req.body;
-     
-  
-      const user = await UserModel.findOne({ 
-        email: email }); 
-  
-  
-      if (!user) {
-        return res.status(400).json({ invalid: true, message: "Invalid email or password" });
-      }
-  
-      const isPasswordMatch = await bcrypt.compare(password, user.password);
-  
-      
-      if (isPasswordMatch) {
-        const token = jwt.sign(
-          { email: user.email, id: user._id },
-          "myjwtsecretkey",
-          { expiresIn: "1h" }
-        );
-  
-        const userDetails = {
-          name: user.name,
-          email: user.email,
-          _id: user._id,
-          role: user.role,
-          phone: user.phone,
-          image: user?.image,
-          district: user.district,
-          standard: user.standard
-        };
-  
-        return res.status(200).json({ token, userDetails, status: 200 });
-      } else {
-        return res.status(400).json({ invalid: true, message: "Invalid email or password" });
-      }
-    } catch (err) {
-      console.error(err); 
-      return res.status(500).json({ error: "Server error, please try again" });
-    }
-  });
-  
+exports.logout = asyncHandler(async (req, res) => {
+  const { id } = req.params;  
 
+  await ActivityLog.findOneAndUpdate(
+    { userId: id, logoutTime: null },
+    { logoutTime: new Date() }
+  );
+  
+  return res
+        .status(200)
+        .json({ status: 200 , message: "User logout" });
+});
 
-// get all 
+// get all
 exports.getAll = asyncHandler(async (req, res) => {
-    const user = await UserModel.find({ role : 'user' });
-    res.status(200).json(user);
-})
+  const user = await UserModel.find({ role: "user" });
+  res.status(200).json(user);
+});
 
 //get by Id
 exports.get = asyncHandler(async (req, res) => {
-    const user = await UserModel.findById(req.params.id);
-    res.status(200).json(user);
-})
+  const user = await UserModel.findById(req.params.id);
+  res.status(200).json(user);
+});
 
 //delete admin
 exports.delete = asyncHandler(async (req, res) => {
-     await UserModel.findByIdAndDelete(req.params.id);
-    res.status(200).json({message: "User deleted"});
-})
-
+  await UserModel.findByIdAndDelete(req.params.id);
+  res.status(200).json({ message: "User deleted" });
+});
 
 // Update user (partial update)
 exports.update = asyncHandler(async (req, res) => {
-  const { name, email, district, standard } = req.body; 
+  const { name, email, district, standard } = req.body;
 
   const image = req.file?.filename;
 
-  
   const user = await UserModel.findById(req.params.id);
 
   if (!user) {
@@ -142,5 +157,11 @@ exports.update = asyncHandler(async (req, res) => {
 
   const updatedUser = await user.save();
 
-  res.status(200).json({ message: "User updated successfully", user: updatedUser, status: 200 });
+  res
+    .status(200)
+    .json({
+      message: "User updated successfully",
+      user: updatedUser,
+      status: 200,
+    });
 });

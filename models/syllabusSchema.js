@@ -43,9 +43,9 @@ const syllabusSchema = new mongoose.Schema(
                   ]
                 },
                 document: {
-                  pdf: {
+                  pdf: [{
                     type: String,
-                  },
+                  }],
                   video: {
                     type: String,
                   },

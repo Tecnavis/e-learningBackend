@@ -11,6 +11,8 @@ var specialDaysRouter = require('./routes/specialDays');
 var syllabusRouter = require('./routes/syllabus');
 var usersRouter = require('./routes/users');
 var discussionRouter = require('./routes/discussion');
+var activeRouter = require('./routes/active');
+
 
 
 
@@ -51,6 +53,10 @@ app.use('/specialdays', specialDaysRouter);
 app.use('/syllabus', syllabusRouter);
 app.use('/users', usersRouter);
 app.use('/discussion', discussionRouter);
+app.use('/weekly-active-users', activeRouter);
+
+
+
 
 
 
