@@ -27,7 +27,7 @@ var app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: ["https://admin.cognixlearn.com", "http://localhost:3000", "http://localhost:5173", "https://cognixlearn.com"],
+  origin: ["https://admin.cognixlearn.com", "http://localhost:3000", "http://localhost:5173", "https://cognixlearn.com", "https://user.cognixlearn.com"],
   methods: ["PUT", "DELETE", "POST", "GET", "PATCH"],
   credentials: true
 }));
