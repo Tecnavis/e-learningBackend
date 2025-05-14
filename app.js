@@ -21,21 +21,13 @@ connectDB();
 var app = express();
 
 // CORS configuration
-app.use(
-  cors({
-    origin: [
-      "https://admin.cognixlearn.com",
-      "https://www.cognixlearn.com",
-      "http://localhost:7868",
-      "http://localhost:7867",
-      "https://cognixlearn.com",
-      "https://user.cognixlearn.com",
-    ],
+app.use(cors({
+  origin: ["https://admin.cognixlearn.com", "https://www.cognixlearn.com", "http://localhost:7868", "http://localhost:7867", "https://cognixlearn.com", "https://user.cognixlearn.com"],
+  methods: ["PUT", "DELETE", "POST", "GET", "PATCH"],
+  credentials: true
+}));
 
-    methods: ["PUT", "DELETE", "POST", "GET", "PATCH"],
-    credentials: true,
-  })
-);
+
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
