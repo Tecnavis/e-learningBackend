@@ -5,7 +5,9 @@ const asyncHandler = require("express-async-handler");
 
 exports.create = asyncHandler(async (req, res) => {
     try {
-      const images = req.files.map(file => file.filename);
+      // const images = req.files.map(file => file.filename);
+      const images = req.cloudinaryImageUrl;
+      
       if (!images.length) {
         return res.status(400).json({ message: "No images uploaded" });
       }
@@ -44,7 +46,8 @@ exports.get = asyncHandler(async (req, res) => {
 
 //update banner
 exports.update = asyncHandler(async (req, res) => {
-    const image = req.file?.filename; 
+    // const image = req.file?.filename; 
+    const image = req.cloudinaryImageUrl
     const { id, index } = req.params;
   
     if (!image) {

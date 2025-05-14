@@ -5,7 +5,9 @@ const asyncHandler = require("express-async-handler");
 exports.create = asyncHandler(async (req, res) => {
   const { title, pdf, date } = req.body;
 
-  const image =  req.file.filename ; 
+//   const image =  req.file.filename ; 
+  const image = req.cloudinaryImageUrl;
+
 
   // Create a new special day entry
   const specialDays = await SpecialDaysModel.create({
@@ -33,11 +35,10 @@ exports.get = asyncHandler(async (req, res) => {
 
 //update A special days
 exports.update = asyncHandler(async (req, res) => {
-    const image = req.file?.filename;
+    // const image = req.file?.filename;
+    const image = req.cloudinaryImageUrl;
+
     const { title, pdf, date } = req.body;
-    console.log(req.body, "body");
-    console.log(image, "img");
-    
     
     const specialDays = await SpecialDaysModel.findByIdAndUpdate(req.params.id, { image, title, pdf, date }, {
         new: true

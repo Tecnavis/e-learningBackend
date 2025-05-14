@@ -11,7 +11,9 @@ exports.create = asyncHandler(async (req, res) => {
       classes = JSON.parse(classes); // Parse the string into an array
     }
 
-    const image = req.file ? req.file.filename : null;
+    // const image = req.file ? req.file.filename : null;
+    const image = req.cloudinaryImageUrl || null;
+
 
     if (image) {
       classes.forEach(classObj => {
@@ -115,7 +117,8 @@ exports.addClassToSyllabus = asyncHandler(async (req, res) => {
   }
 
   // Step 3: Handle image upload
-  const image = req.file ? req.file.filename : null;
+  // const image = req.file ? req.file.filename : null;
+const image = req.cloudinaryImageUrl || null;
 
   // If an image is uploaded, assign it to each subject in the class
   if (image) {
@@ -185,7 +188,9 @@ exports.addClassSubjectsToSyllabus = asyncHandler(async (req, res) => {
   }
   
   // Handle image upload
-  const image = req.file ? req.file.filename : null;
+  // const image = req.file ? req.file.filename : null;
+  const image = req.cloudinaryImageUrl || null;
+
   if (image) {
     newSubject.subjects.forEach(subject => {
       subject.image = image;
@@ -228,7 +233,7 @@ exports.editClassSubjectsToSyllabus = asyncHandler(async (req, res) => {
   subject.author = updatedData.subjects[0].author || subject.author;
 
   if (req.file) {
-    subject.image = req.file.filename; // replace old image if new one is uploaded
+    subject.image =  req.cloudinaryImageUrl || null; // replace old image if new one is uploaded
   }
 
   await syllabus.save();

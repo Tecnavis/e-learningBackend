@@ -132,7 +132,8 @@ exports.delete = asyncHandler(async (req, res) => {
 exports.update = asyncHandler(async (req, res) => {
   const { name, email, district, standard } = req.body;
 
-  const image = req.file?.filename;
+  // const image = req.file?.filename;
+  const image = req.cloudinaryImageUrl
 
   const user = await UserModel.findById(req.params.id);
 
