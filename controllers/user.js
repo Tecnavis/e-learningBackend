@@ -3,7 +3,6 @@ const UserModel = require("../models/userSchema");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 
 //create user
 exports.create = asyncHandler(async (req, res) => {
@@ -130,7 +129,7 @@ exports.delete = asyncHandler(async (req, res) => {
 
 // Update user (partial update)
 exports.update = asyncHandler(async (req, res) => {
-  const { name, email, district, standard } = req.body;
+  const { name, email, district, standard, phone  } = req.body;
 
   // const image = req.file?.filename;
   const image = req.cloudinaryImageUrl
@@ -155,6 +154,7 @@ exports.update = asyncHandler(async (req, res) => {
   if (district) user.district = district;
   if (standard) user.standard = standard;
   if (image) user.image = image;
+  if(phone) user.phone = phone;
 
   const updatedUser = await user.save();
 
